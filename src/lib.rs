@@ -1,15 +1,20 @@
+extern crate dotenv;
+use dotenv::dotenv;
 use serde_json;
 use std::{collections::HashMap, env, error::Error, io};
 
 const SETTING_ENDPOINTS: &'static str = "https://discord.com/api/v9/users/@me/settings";
 
-pub async fn run(mut args: env::Args, token: String) {
+pub async fn run(mut args: env::Args) {
+    dotenv().ok();
+    let discord_token = env::var("DISCORD_TOKEN").expect("Discord Token is not found");
+
     // skip the first index (name of binary)
     args.next();
 
     match args.next() {
         Some(arg) => {
-            match_arg(arg, token).await;
+            match_arg(arg, discord_token).await;
         }
         None => {
             eprintln!("Please include arguments.");
