@@ -80,3 +80,19 @@ pub async fn toggle_game_rpc(token: String) -> Result<serde_json::Value, Box<dyn
         return Err(Box::new(bad_status_error));
     }
 }
+
+#[tokio::test]
+#[should_panic(expected = "Unauthorized request")]
+async fn unauthorized_request() {
+    let discord_token = String::from("Invalid token peko");
+
+    match toggle_game_rpc(discord_token).await {
+        Ok(_) => {
+            // Should not run
+            panic!("Oh no.");
+        }
+        Err(_) => {
+            panic!("Unauthorized request");
+        }
+    }
+}
