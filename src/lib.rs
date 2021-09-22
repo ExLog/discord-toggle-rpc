@@ -1,8 +1,11 @@
 extern crate dotenv;
+mod utils;
+
 use dotenv::dotenv;
 use serde_json;
 use serde_json::from_str;
 use std::{collections::HashMap, env, error::Error, io};
+use utils::handle_status_error;
 
 const SETTING_ENDPOINTS: &'static str = "https://discord.com/api/v9/users/@me/settings";
 const CONNECTION_ENDPOINTS: &'static str = "https://discord.com/api/v9/users/@me/connections";
@@ -55,13 +58,7 @@ pub async fn toggle_spotify_rpc(token: String) -> Result<serde_json::Value, Box<
         .send()
         .await?;
 
-    if res.status() != 200 {
-        let bad_status_error = io::Error::new(
-            io::ErrorKind::Other,
-            format!("Bad status code: {}", res.status()),
-        );
-        return Err(Box::new(bad_status_error));
-    }
+    handle_status_error(res.status().as_u16())?;
 
     let connections: serde_json::Value = from_str(&res.text().await?)?;
 
@@ -77,16 +74,13 @@ pub async fn toggle_spotify_rpc(token: String) -> Result<serde_json::Value, Box<
     }
 
     // Check whether spotify_id is None or not
-    match spotify_id {
-        None => {
-            let connection_error = io::Error::new(
-                io::ErrorKind::Other,
-                format!("Account is not connected to Spotify"),
-            );
+    if let None = spotify_id {
+        let connection_error = io::Error::new(
+            io::ErrorKind::Other,
+            format!("Account is not connected to Spotify"),
+        );
 
-            return Err(Box::new(connection_error));
-        }
-        _ => (),
+        return Err(Box::new(connection_error));
     };
 
     let spotify_id = spotify_id.unwrap();
@@ -103,17 +97,12 @@ pub async fn toggle_spotify_rpc(token: String) -> Result<serde_json::Value, Box<
         .send()
         .await?;
 
-    if res.status() == 200 {
+    if let Err(err) = handle_status_error(res.status().as_u16()) {
+        Err(err)
+    } else {
         let current_settings: serde_json::Value = serde_json::from_str(&res.text().await?)?;
 
         return Ok(current_settings["show_activity"].clone());
-    } else {
-        let bad_status_error = io::Error::new(
-            io::ErrorKind::Other,
-            format!("Bad status code: {}", res.status()),
-        );
-
-        return Err(Box::new(bad_status_error));
     }
 }
 
@@ -126,13 +115,7 @@ pub async fn toggle_game_rpc(token: String) -> Result<serde_json::Value, Box<dyn
         .send()
         .await?;
 
-    if res.status() != 200 {
-        let bad_status_error = io::Error::new(
-            io::ErrorKind::Other,
-            format!("Bad status code: {}", res.status()),
-        );
-        return Err(Box::new(bad_status_error));
-    }
+    handle_status_error(res.status().as_u16())?;
 
     // parse from json
     let settings: serde_json::Value = serde_json::from_str(&res.text().await?)?;
@@ -149,17 +132,12 @@ pub async fn toggle_game_rpc(token: String) -> Result<serde_json::Value, Box<dyn
         .send()
         .await?;
 
-    if res.status() == 200 {
+    if let Err(err) = handle_status_error(res.status().as_u16()) {
+        Err(err)
+    } else {
         let current_settings: serde_json::Value = serde_json::from_str(&res.text().await?)?;
 
         return Ok(current_settings["show_current_game"].clone());
-    } else {
-        let bad_status_error = io::Error::new(
-            io::ErrorKind::Other,
-            format!("Bad status code: {}", res.status()),
-        );
-
-        return Err(Box::new(bad_status_error));
     }
 }
 
