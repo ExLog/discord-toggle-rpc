@@ -2,13 +2,12 @@ extern crate dotenv;
 mod utils;
 
 use dotenv::dotenv;
-use serde_json;
 use serde_json::from_str;
 use std::{collections::HashMap, env, error::Error, io};
 use utils::handle_status_error;
 
-const SETTING_ENDPOINTS: &'static str = "https://discord.com/api/v9/users/@me/settings";
-const CONNECTION_ENDPOINTS: &'static str = "https://discord.com/api/v9/users/@me/connections";
+const SETTING_ENDPOINTS: &str = "https://discord.com/api/v9/users/@me/settings";
+const CONNECTION_ENDPOINTS: &str = "https://discord.com/api/v9/users/@me/connections";
 
 pub async fn run(mut args: env::Args) {
     dotenv().ok();
@@ -74,11 +73,9 @@ pub async fn toggle_spotify_rpc(token: String) -> Result<serde_json::Value, Box<
     }
 
     // Check whether spotify_id is None or not
-    if let None = spotify_id {
-        let connection_error = io::Error::new(
-            io::ErrorKind::Other,
-            format!("Account is not connected to Spotify"),
-        );
+    if spotify_id.is_none() {
+        let connection_error =
+            io::Error::new(io::ErrorKind::Other, "Account is not connected to Spotify");
 
         return Err(Box::new(connection_error));
     };
@@ -102,7 +99,7 @@ pub async fn toggle_spotify_rpc(token: String) -> Result<serde_json::Value, Box<
     } else {
         let current_settings: serde_json::Value = serde_json::from_str(&res.text().await?)?;
 
-        return Ok(current_settings["show_activity"].clone());
+        Ok(current_settings["show_activity"].clone())
     }
 }
 
@@ -137,7 +134,7 @@ pub async fn toggle_game_rpc(token: String) -> Result<serde_json::Value, Box<dyn
     } else {
         let current_settings: serde_json::Value = serde_json::from_str(&res.text().await?)?;
 
-        return Ok(current_settings["show_current_game"].clone());
+        Ok(current_settings["show_current_game"].clone())
     }
 }
 
