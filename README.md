@@ -4,6 +4,12 @@ A simple command-line app to toggle Discord Rich Presence written in Rust.
 
 Discord Rich Presence is status that shows up when you're playing game or listening to Spotify.
 
+## Install
+
+```sh
+cargo install discord-toggle-rpc
+```
+
 ## Environment Variables
 
 - DISCORD_TOKEN
